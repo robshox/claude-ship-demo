@@ -1,13 +1,24 @@
-export interface Coupon {
+interface CouponBase {
   code: string;
-  kind: "fixed";
-  /** Amount taken off the subtotal, in cents. */
-  amountCents: number;
   /** The coupon stops working at this moment. */
   expiresAt?: Date;
   /** The subtotal must be at least this much for the coupon to apply. */
   minSubtotalCents?: number;
 }
+
+export interface FixedCoupon extends CouponBase {
+  kind: "fixed";
+  /** Amount taken off the subtotal, in cents. */
+  amountCents: number;
+}
+
+export interface PercentCoupon extends CouponBase {
+  kind: "percent";
+  /** Share of the subtotal taken off, 0–100. */
+  percent: number;
+}
+
+export type Coupon = FixedCoupon | PercentCoupon;
 
 export function isActive(coupon: Coupon, now: Date): boolean {
   return !coupon.expiresAt || now < coupon.expiresAt;
@@ -19,6 +30,9 @@ export function isActive(coupon: Coupon, now: Date): boolean {
  */
 export function discountFor(coupon: Coupon, subtotalCents: number, now: Date): number {
   if (!isActive(coupon, now)) return 0;
+  if (coupon.kind === "percent") {
+    return Math.floor((subtotalCents * coupon.percent) / 100);
+  }
   if (coupon.minSubtotalCents && subtotalCents < coupon.minSubtotalCents) return 0;
   return Math.min(coupon.amountCents, subtotalCents);
 }
