@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { cartTotal, subtotal, type LineItem } from "../src/cart.ts";
 import { formatCents } from "../src/money.ts";
-import type { Coupon } from "../src/coupons.ts";
+import { describeCoupon, type Coupon } from "../src/coupons.ts";
 
 const now = new Date("2026-11-24T12:00:00Z");
 const items: LineItem[] = [
@@ -36,6 +36,43 @@ test("expired coupon is ignored", () => {
 test("minimum spend is enforced", () => {
   const min: Coupon = { code: "MIN", kind: "fixed", amountCents: 500, minSubtotalCents: 10_000 };
   assert.equal(cartTotal(items, min, now), 4900);
+});
+
+test("percent coupon takes a share of the subtotal", () => {
+  const tenOff: Coupon = { code: "TEN", kind: "percent", percent: 10 };
+  assert.equal(cartTotal(items, tenOff, now), 4410);
+});
+
+test("percent discount rounds to the nearest cent", () => {
+  const fifteen: Coupon = { code: "FIFTEEN", kind: "percent", percent: 15 };
+  const one: LineItem[] = [{ sku: "cap", unitPriceCents: 1999, quantity: 1 }];
+  // 15% of 1999 is 299.85, so 300 comes off.
+  assert.equal(cartTotal(one, fifteen, now), 1699);
+});
+
+test("percent coupon respects minimum spend", () => {
+  const min: Coupon = { code: "PMIN", kind: "percent", percent: 10, minSubtotalCents: 10_000 };
+  assert.equal(cartTotal(items, min, now), 4900);
+});
+
+test("percent coupon never takes the total below zero", () => {
+  const huge: Coupon = { code: "HUGE", kind: "percent", percent: 150 };
+  assert.equal(cartTotal(items, huge, now), 0);
+});
+
+test("negative coupons never raise the total", () => {
+  const negPercent: Coupon = { code: "NEGP", kind: "percent", percent: -10 };
+  const negFixed: Coupon = { code: "NEGF", kind: "fixed", amountCents: -500 };
+  assert.equal(cartTotal(items, negPercent, now), 4900);
+  assert.equal(cartTotal(items, negFixed, now), 4900);
+});
+
+test("describeCoupon labels a percent coupon", () => {
+  assert.equal(describeCoupon({ code: "FIFTEEN", kind: "percent", percent: 15 }), "15% off");
+});
+
+test("describeCoupon labels a fixed coupon with formatCents", () => {
+  assert.equal(describeCoupon({ code: "FIVE", kind: "fixed", amountCents: 500 }), "$5.00 off");
 });
 
 test("formatCents", () => {
