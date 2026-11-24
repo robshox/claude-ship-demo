@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { cartTotal, subtotal, type LineItem } from "../src/cart.ts";
 import { formatCents } from "../src/money.ts";
-import type { Coupon } from "../src/coupons.ts";
+import { describeCoupon, type Coupon } from "../src/coupons.ts";
 
 const now = new Date("2026-11-24T12:00:00Z");
 const items: LineItem[] = [
@@ -65,6 +65,14 @@ test("negative coupons never raise the total", () => {
   const negFixed: Coupon = { code: "NEGF", kind: "fixed", amountCents: -500 };
   assert.equal(cartTotal(items, negPercent, now), 4900);
   assert.equal(cartTotal(items, negFixed, now), 4900);
+});
+
+test("describeCoupon labels a percent coupon", () => {
+  assert.equal(describeCoupon({ code: "FIFTEEN", kind: "percent", percent: 15 }), "15% off");
+});
+
+test("describeCoupon labels a fixed coupon with formatCents", () => {
+  assert.equal(describeCoupon({ code: "FIVE", kind: "fixed", amountCents: 500 }), "$5.00 off");
 });
 
 test("formatCents", () => {

@@ -1,3 +1,5 @@
+import { formatCents } from "./money.ts";
+
 interface CouponBase {
   code: string;
   /** The coupon stops working at this moment. */
@@ -19,6 +21,13 @@ export interface PercentCoupon extends CouponBase {
 }
 
 export type Coupon = FixedCoupon | PercentCoupon;
+
+/** A short label for the cart UI, e.g. "15% off" or "$5.00 off". */
+export function describeCoupon(coupon: Coupon): string {
+  return coupon.kind === "percent"
+    ? `${coupon.percent}% off`
+    : `${formatCents(coupon.amountCents)} off`;
+}
 
 export function isActive(coupon: Coupon, now: Date): boolean {
   return !coupon.expiresAt || now < coupon.expiresAt;
