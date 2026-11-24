@@ -30,9 +30,10 @@ export function isActive(coupon: Coupon, now: Date): boolean {
  */
 export function discountFor(coupon: Coupon, subtotalCents: number, now: Date): number {
   if (!isActive(coupon, now)) return 0;
-  if (coupon.kind === "percent") {
-    return Math.floor((subtotalCents * coupon.percent) / 100);
-  }
   if (coupon.minSubtotalCents && subtotalCents < coupon.minSubtotalCents) return 0;
-  return Math.min(coupon.amountCents, subtotalCents);
+  const raw =
+    coupon.kind === "percent"
+      ? Math.round((subtotalCents * coupon.percent) / 100)
+      : coupon.amountCents;
+  return Math.max(0, Math.min(raw, subtotalCents));
 }

@@ -50,6 +50,23 @@ test("percent discount rounds to the nearest cent", () => {
   assert.equal(cartTotal(one, fifteen, now), 1699);
 });
 
+test("percent coupon respects minimum spend", () => {
+  const min: Coupon = { code: "PMIN", kind: "percent", percent: 10, minSubtotalCents: 10_000 };
+  assert.equal(cartTotal(items, min, now), 4900);
+});
+
+test("percent coupon never takes the total below zero", () => {
+  const huge: Coupon = { code: "HUGE", kind: "percent", percent: 150 };
+  assert.equal(cartTotal(items, huge, now), 0);
+});
+
+test("negative coupons never raise the total", () => {
+  const negPercent: Coupon = { code: "NEGP", kind: "percent", percent: -10 };
+  const negFixed: Coupon = { code: "NEGF", kind: "fixed", amountCents: -500 };
+  assert.equal(cartTotal(items, negPercent, now), 4900);
+  assert.equal(cartTotal(items, negFixed, now), 4900);
+});
+
 test("formatCents", () => {
   assert.equal(formatCents(1999), "$19.99");
   assert.equal(formatCents(-500), "-$5.00");
