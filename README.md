@@ -1,6 +1,6 @@
 # claude-ship-demo
 
-A tiny checkout module: line items, a subtotal, and coupons. It exists to put
+A tiny checkout module: line items, a subtotal, and fixed or percentage coupons. It exists to put
 [Claude Ship](https://code.claude.com/docs/en/claude-ship) on real pull
 requests for a Switch Dimension video.
 

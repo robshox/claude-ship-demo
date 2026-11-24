@@ -38,6 +38,18 @@ test("minimum spend is enforced", () => {
   assert.equal(cartTotal(items, min, now), 4900);
 });
 
+test("percent coupon takes a share of the subtotal", () => {
+  const tenOff: Coupon = { code: "TEN", kind: "percent", percent: 10 };
+  assert.equal(cartTotal(items, tenOff, now), 4410);
+});
+
+test("percent discount rounds to the nearest cent", () => {
+  const fifteen: Coupon = { code: "FIFTEEN", kind: "percent", percent: 15 };
+  const one: LineItem[] = [{ sku: "cap", unitPriceCents: 1999, quantity: 1 }];
+  // 15% of 1999 is 299.85, so 300 comes off.
+  assert.equal(cartTotal(one, fifteen, now), 1699);
+});
+
 test("formatCents", () => {
   assert.equal(formatCents(1999), "$19.99");
   assert.equal(formatCents(-500), "-$5.00");
